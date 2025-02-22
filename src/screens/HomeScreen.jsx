@@ -16,6 +16,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const [timersData, setTimersData] = useState([]);
   const intervalsRef = useRef({});
+  const [expand, setExpand] = useState('');
 
   useEffect(() => {
     getTimersHandler();
@@ -143,11 +144,15 @@ const HomeScreen = () => {
             paddingBottom: 10,
           }}
           showsVerticalScrollIndicator={false}
-          renderItem={({item}) => {
+          renderItem={({item, index}) => {
             return (
               <TouchableWithoutFeedback
                 onPress={() => {
-                  // startTimer(item?.id);
+                  if (expand === '' || index !== expand) {
+                    setExpand(index);
+                  } else {
+                    setExpand('');
+                  }
                 }}>
                 <View
                   style={{
@@ -157,94 +162,124 @@ const HomeScreen = () => {
                   }}>
                   <View
                     style={{
-                      gap: 10,
-                    }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        lineHeight: 23,
-                        fontWeight: '500',
-                        color: '#000000',
-                      }}>
-                      {item?.name}
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        lineHeight: 23,
-                        fontWeight: '500',
-                        color: '#000000',
-                      }}>
-                      {formatTime(item?.remainingTime)}
-                    </Text>
-                  </View>
-                  <View
-                    style={{
                       flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 20,
-                      alignSelf: 'center',
+                      justifyContent: 'space-between',
                     }}>
-                    {item?.status === 'Paused' ? (
-                      <TouchableWithoutFeedback
-                        onPress={() => {
-                          startTimer(item?.id);
-                        }}>
-                        <View>
-                          <Icon name={'play-arrow'} size={40} color={'red'} />
-                        </View>
-                      </TouchableWithoutFeedback>
-                    ) : null}
-
-                    {item?.status === 'Running' ? (
-                      <TouchableWithoutFeedback
-                        onPress={() => {
-                          pauseTimer(item?.id);
-                        }}>
-                        <View>
-                          <Icon name={'pause'} size={40} color={'red'} />
-                        </View>
-                      </TouchableWithoutFeedback>
-                    ) : null}
-                    <TouchableWithoutFeedback
-                      onPress={() => {
-                        resetTimer(item?.id);
+                    <View
+                      style={{
+                        gap: 10,
                       }}>
-                      <View>
-                        <Icon name={'restart-alt'} size={40} color={'red'} />
-                      </View>
-                    </TouchableWithoutFeedback>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          lineHeight: 23,
+                          fontWeight: '500',
+                          color: '#000000',
+                        }}>
+                        {item?.name}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          lineHeight: 23,
+                          fontWeight: '500',
+                          color: '#000000',
+                        }}>
+                        {formatTime(item?.remainingTime)}
+                      </Text>
+                    </View>
+                    <View>
+                      {expand === index ? (
+                        <Icon
+                          name={'keyboard-arrow-up'}
+                          size={30}
+                          color={'#000000'}
+                        />
+                      ) : (
+                        <Icon
+                          name={'keyboard-arrow-down'}
+                          size={30}
+                          color={'#000000'}
+                        />
+                      )}
+                    </View>
                   </View>
+                  {expand === index ? (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 20,
+                        alignSelf: 'center',
+                      }}>
+                      {item?.status === 'Paused' ? (
+                        <TouchableWithoutFeedback
+                          onPress={() => {
+                            startTimer(item?.id);
+                          }}>
+                          <View
+                            style={{
+                              backgroundColor: '#E4E4FF',
+                              width: 40,
+                              height: 40,
+                              borderRadius: 50,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                            <Icon
+                              name={'play-arrow'}
+                              size={30}
+                              color={'#000000'}
+                            />
+                          </View>
+                        </TouchableWithoutFeedback>
+                      ) : null}
+
+                      {item?.status === 'Running' ? (
+                        <TouchableWithoutFeedback
+                          onPress={() => {
+                            pauseTimer(item?.id);
+                          }}>
+                          <View
+                            style={{
+                              backgroundColor: '#E4E4FF',
+                              width: 40,
+                              height: 40,
+                              borderRadius: 50,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                            <Icon name={'pause'} size={30} color={'#000000'} />
+                          </View>
+                        </TouchableWithoutFeedback>
+                      ) : null}
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          resetTimer(item?.id);
+                        }}>
+                        <View
+                          style={{
+                            backgroundColor: '#E4E4FF',
+                            width: 40,
+                            height: 40,
+                            borderRadius: 50,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                          <Icon
+                            name={'restart-alt'}
+                            size={30}
+                            color={'#000000'}
+                          />
+                        </View>
+                      </TouchableWithoutFeedback>
+                    </View>
+                  ) : null}
                 </View>
               </TouchableWithoutFeedback>
             );
           }}
         />
-
-        <TouchableWithoutFeedback
-          onPress={() => {
-            AsyncStorage.clear();
-          }}>
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              backgroundColor: '#3D4AEE',
-              borderRadius: 50,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text
-              style={{
-                fontSize: 18,
-                lineHeight: 25,
-                fontWeight: 'bold',
-                color: '#ffffff',
-              }}>
-              +
-            </Text>
-          </View>
-        </TouchableWithoutFeedback>
 
         <TouchableWithoutFeedback
           onPress={() => {
