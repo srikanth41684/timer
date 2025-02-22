@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -11,9 +11,11 @@ import {
 import {Header} from '@react-navigation/elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {AppThemeContext} from '../context/AppThemeContext';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const {theme, setTheme} = useContext(AppThemeContext);
   const [timersData, setTimersData] = useState([]);
   const intervalsRef = useRef({});
   const [expand, setExpand] = useState('');
@@ -112,9 +114,14 @@ const HomeScreen = () => {
     return Math.round(((duration - remainingTime) / duration) * 100);
   };
 
+  const themeHandler = async val => {
+    AsyncStorage.setItem('theme', val);
+    setTheme(val);
+  };
+
   useEffect(() => {
-    console.log('timersData=========>', timersData);
-  }, [timersData]);
+    console.log('timersData===========>', timersData, theme);
+  }, [timersData, theme]);
 
   return (
     <SafeAreaView
@@ -133,12 +140,60 @@ const HomeScreen = () => {
               marginRight: 10,
             }}></View>
         )}
+        headerStyle={{
+          backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
+        }}
+        headerTitleStyle={{
+          color: theme === 'dark' ? '#ffffff' : '#000000',
+        }}
         title="Wellcome"
+        headerRight={() => (
+          <View
+            style={{
+              paddingRight: 20,
+            }}>
+            {theme === 'dark' ? (
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  themeHandler('light');
+                }}>
+                <View
+                  style={{
+                    backgroundColor: '#E4E4FF',
+                    width: 40,
+                    height: 40,
+                    borderRadius: 50,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <Icon name={'light-mode'} size={30} color={theme === 'dark' ? '#121212' : '#EFF1FE'} />
+                </View>
+              </TouchableWithoutFeedback>
+            ) : (
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  themeHandler('dark');
+                }}>
+                <View
+                  style={{
+                    backgroundColor: '#E4E4FF',
+                    width: 40,
+                    height: 40,
+                    borderRadius: 50,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <Icon name={'dark-mode'} size={25} color={'#000000'} />
+                </View>
+              </TouchableWithoutFeedback>
+            )}
+          </View>
+        )}
       />
       <View
         style={{
           flex: 1,
-          backgroundColor: '#EFF1FE',
+          backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
           padding: 20,
         }}>
         <FlatList
@@ -152,7 +207,7 @@ const HomeScreen = () => {
             return (
               <View
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
                   borderRadius: 12,
                   padding: 15,
                 }}>
@@ -179,7 +234,7 @@ const HomeScreen = () => {
                           fontSize: 16,
                           lineHeight: 23,
                           fontWeight: '500',
-                          color: '#000000',
+                          color: theme === 'dark' ? '#ffffff' : '#000000',
                         }}>
                         {item?.name}
                       </Text>
@@ -188,7 +243,7 @@ const HomeScreen = () => {
                           fontSize: 16,
                           lineHeight: 23,
                           fontWeight: '500',
-                          color: '#000000',
+                          color: theme === 'dark' ? '#ffffff' : '#000000',
                         }}>
                         {formatTime(item?.remainingTime)}
                       </Text>
@@ -198,13 +253,13 @@ const HomeScreen = () => {
                         <Icon
                           name={'keyboard-arrow-up'}
                           size={30}
-                          color={'#000000'}
+                          color={theme === 'dark' ? '#ffffff' : '#000000'}
                         />
                       ) : (
                         <Icon
                           name={'keyboard-arrow-down'}
                           size={30}
-                          color={'#000000'}
+                          color={theme === 'dark' ? '#ffffff' : '#000000'}
                         />
                       )}
                     </View>

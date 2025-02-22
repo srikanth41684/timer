@@ -15,11 +15,11 @@ const darkTheme = {
 };
 
 const ThemeProvider = ({children}) => {
-  const [theme, setTheme] = useState(
-    Appearance.getColorScheme() === 'dark' ? darkTheme : lightTheme,
-  );
+  const [theme, setTheme] = useState(Appearance.getColorScheme());
 
   useEffect(() => {
+    console.log('ThemeProvider-theme=====>', theme);
+
     AsyncStorage.getItem('theme').then(theme => {
       if (theme) {
         setTheme(theme === 'dark' ? darkTheme : lightTheme);
@@ -30,7 +30,7 @@ const ThemeProvider = ({children}) => {
   const toggleTheme = () => {
     const newTheme = theme === darkTheme ? lightTheme : darkTheme;
     setTheme(newTheme);
-    AsyncStorage.setItem('theme', newTheme === darkTheme ? 'dark' : 'light');
+    AsyncStorage.setItem('theme', theme);
   };
 
   return (
