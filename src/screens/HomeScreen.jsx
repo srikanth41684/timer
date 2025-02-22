@@ -166,7 +166,11 @@ const HomeScreen = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                  <Icon name={'light-mode'} size={30} color={theme === 'dark' ? '#121212' : '#EFF1FE'} />
+                  <Icon
+                    name={'light-mode'}
+                    size={30}
+                    color={theme === 'dark' ? '#121212' : '#EFF1FE'}
+                  />
                 </View>
               </TouchableWithoutFeedback>
             ) : (
@@ -309,7 +313,7 @@ const HomeScreen = () => {
                           fontSize: 18,
                           lineHeight: 25,
                           fontWeight: 'bold',
-                          color: '#000000',
+                          color: theme === 'dark' ? '#ffffff' : '#000000',
                         }}>
                         {getProgress(item?.duration, item?.remainingTime)}%
                       </Text>
@@ -405,7 +409,7 @@ const HomeScreen = () => {
             }}>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 26,
                 lineHeight: 25,
                 fontWeight: 'bold',
                 color: '#ffffff',

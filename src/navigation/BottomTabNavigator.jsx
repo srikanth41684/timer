@@ -1,13 +1,15 @@
 import {View, Text} from 'react-native';
-import React from 'react';
+import React, {useContext} from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {AppThemeContext} from '../context/AppThemeContext';
 
 const bottomTabNav = createBottomTabNavigator();
 
 const BottomTabNavigator = () => {
+  const {theme, setTheme} = useContext(AppThemeContext);
   return (
     <bottomTabNav.Navigator
       screenOptions={({route}) => ({
@@ -22,14 +24,14 @@ const BottomTabNavigator = () => {
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#000000',
+        tabBarActiveTintColor: theme === 'dark' ? '#ffffff' :  '#000000',
         tabBarInactiveTintColor: 'gray',
         tabBarLabelStyle: {
           fontSize: 14,
           fontWeight: 'bold',
         },
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
           height: 60,
         },
       })}>
