@@ -9,8 +9,10 @@ import React, {useEffect, useState} from 'react';
 import {TimerPickerModal} from 'react-native-timer-picker';
 import DropdownSelect from '../components/DropdownSelect';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation} from '@react-navigation/native';
 
 const CreateTimerScreen = () => {
+  const navigation = useNavigation();
   const [name, setName] = useState('');
   const [time, setTime] = useState({hours: 0, minutes: 0, seconds: 0});
   const [show, setShow] = useState(false);
@@ -41,7 +43,7 @@ const CreateTimerScreen = () => {
     } else {
       await AsyncStorage.setItem('timers', JSON.stringify([timer]));
     }
-
+    navigation.goBack();
     console.log('timer===========>', timer);
   };
 
@@ -124,7 +126,9 @@ const CreateTimerScreen = () => {
         </View>
         <TouchableWithoutFeedback
           onPress={() => {
-            createTimerHandler();
+            if (name !== '' && category !== 'Select an option' && time) {
+              createTimerHandler();
+            }
           }}>
           <View
             style={{

@@ -1,5 +1,5 @@
-import {useNavigation} from '@react-navigation/native';
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import React, {useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -19,10 +19,22 @@ const HomeScreen = () => {
   const [timersData, setTimersData] = useState([]);
   const intervalsRef = useRef({});
   const [expand, setExpand] = useState('');
+  const [completedData, setCompletedData] = useState(null);
 
-  useEffect(() => {
-    getTimersHandler();
-  }, []);
+  // useEffect(() => {
+  //   getTimersHandler();
+  // }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen is focused (returned to this screen)');
+      getTimersHandler(); // Call your function here
+
+      return () => {
+        console.log('Screen is unfocused (navigating away)');
+      };
+    }, []),
+  );
 
   const getTimersHandler = async () => {
     const savedTimers = await AsyncStorage.getItem('timers');
@@ -33,9 +45,43 @@ const HomeScreen = () => {
     }
   };
 
+  const completedDataHandler = async () => {
+    if (completedData) {
+      const data = await AsyncStorage.getItem('history');
+      let finalData = JSON.parse(data);
+      if (finalData) {
+        AsyncStorage.setItem(
+          'history',
+          JSON.stringify([...finalData, completedData]),
+        );
+      } else {
+        AsyncStorage.setItem('history', JSON.stringify([...completedData]));
+      }
+    }
+  };
+
+  useEffect(() => {
+    completedDataHandler();
+  }, [completedData]);
+
   const saveTimers = async updatedTimers => {
-    setTimersData(updatedTimers);
-    await AsyncStorage.setItem('timers', JSON.stringify(updatedTimers));
+    let data = [];
+    if (updatedTimers) {
+      updatedTimers?.filter(item => {
+        if (item?.status === 'Completed') {
+          setCompletedData(item);
+        } else {
+          data.push(item);
+        }
+      });
+    }
+
+    console.log('data=========>', data);
+
+    setTimersData(data);
+    await AsyncStorage.setItem('timers', JSON.stringify(data));
+    getTimersHandler();
+    console.log('data=========>************', data);
   };
 
   const formatTime = totalSeconds => {
@@ -49,6 +95,40 @@ const HomeScreen = () => {
     return `${hours}:${minutes}:${seconds}`;
   };
 
+  const startTimerHandler = id => {
+    const interval = setInterval(() => {
+      setTimersData(prevData => {
+        let shouldClearInterval = false;
+
+        const updatedTimers = prevData?.map(timer => {
+          if (timer?.id === id) {
+            if (timer?.remainingTime > 0) {
+              return {
+                ...timer,
+                remainingTime: timer?.remainingTime - 1,
+                status: 'Running',
+              };
+            } else {
+              shouldClearInterval = true;
+              return {
+                ...timer,
+                status: 'Completed',
+              };
+            }
+          }
+          return timer;
+        });
+
+        saveTimers(updatedTimers);
+        if (shouldClearInterval) {
+          clearInterval(interval);
+        }
+
+        return updatedTimers;
+      });
+    }, 1000);
+  };
+
   const startTimer = id => {
     setTimersData(prev =>
       prev.map(timer => {
@@ -57,11 +137,17 @@ const HomeScreen = () => {
 
           const interval = setInterval(() => {
             setTimersData(prevTimers => {
-              const updatedTimers = prevTimers.map(t =>
-                t.id === id && t.remainingTime > 0
-                  ? {...t, remainingTime: t.remainingTime - 1}
-                  : t,
-              );
+              const updatedTimers = prevTimers.map(t => {
+                if (t.id === id) {
+                  if (t.remainingTime > 0) {
+                    return {...t, remainingTime: t.remainingTime - 1};
+                  } else {
+                    return {...t, status: 'Completed'};
+                  }
+                } else {
+                  return t;
+                }
+              });
 
               saveTimers(updatedTimers);
               return updatedTimers;
@@ -324,10 +410,10 @@ const HomeScreen = () => {
                         alignItems: 'center',
                         gap: 15,
                       }}>
-                      {item?.status === 'Paused' ? (
+                      {item?.status !== 'Running' ? (
                         <TouchableWithoutFeedback
                           onPress={() => {
-                            startTimer(item?.id);
+                            startTimerHandler(item?.id);
                           }}>
                           <View
                             style={{

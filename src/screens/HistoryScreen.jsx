@@ -1,7 +1,20 @@
-import {View, Text, SafeAreaView, FlatList} from 'react-native';
-import React from 'react';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  FlatList,
+  TouchableWithoutFeedback,
+} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
+import {useNavigation} from '@react-navigation/native';
+import {AppThemeContext} from '../context/AppThemeContext';
+import {Header} from '@react-navigation/elements';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HistoryScreen = () => {
+  const navigation = useNavigation();
+  const {theme, setTheme} = useContext(AppThemeContext);
+  const [refreshing, setRefreshing] = useState(false);
   const data = [
     {
       id: 1,
@@ -28,15 +41,43 @@ const HistoryScreen = () => {
       category: 'Break',
     },
   ];
+
+  const getHistoryHandler = async () => {
+    const data = await AsyncStorage.getItem('history');
+    let finalData = JSON.parse(data);
+    console.log('finalData==========>', finalData);
+    setRefreshing(false);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    getHistoryHandler(); // Fetch updated timers from AsyncStorage
+  };
+
+  useEffect(() => {
+    console.log('yes');
+
+    getHistoryHandler();
+  }, []);
   return (
     <SafeAreaView
       style={{
         flex: 1,
       }}>
+      <Header
+        headerStyle={{
+          backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
+        }}
+        headerTitleStyle={{
+          color: theme === 'dark' ? '#ffffff' : '#000000',
+          paddingLeft: 20,
+        }}
+        title="History"
+      />
       <View
         style={{
           flex: 1,
-          backgroundColor: '#EFF1FE',
+          backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
           padding: 20,
         }}>
         <FlatList
@@ -45,12 +86,14 @@ const HistoryScreen = () => {
             gap: 20,
             paddingBottom: 10,
           }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           showsVerticalScrollIndicator={false}
           renderItem={({item}) => {
             return (
               <View
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
                   borderRadius: 12,
                   padding: 15,
                   gap: 10,
@@ -64,7 +107,7 @@ const HistoryScreen = () => {
                     style={{
                       fontSize: 16,
                       lineHeight: 23,
-                      color: '#000000',
+                      color: theme === 'dark' ? '#ffffff' : '#000000',
                       fontWeight: '500',
                     }}>
                     {item.timerName}
@@ -73,7 +116,7 @@ const HistoryScreen = () => {
                     style={{
                       fontSize: 14,
                       lineHeight: 21,
-                      color: 'green',
+                      color: theme === 'dark' ? '#FFA24D' : 'green',
                     }}>
                     {item.category}
                   </Text>
@@ -82,14 +125,13 @@ const HistoryScreen = () => {
                   style={{
                     fontSize: 14,
                     lineHeight: 21,
-                    color: '#000000',
+                    color: theme === 'dark' ? '#ffffff' : '#000000',
                   }}>
                   Completed at: {item?.completionTime}
                 </Text>
               </View>
             );
           }}
-          // keyExtractor={({item}) => item.id}
         />
       </View>
     </SafeAreaView>
