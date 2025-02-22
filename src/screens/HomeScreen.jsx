@@ -108,6 +108,10 @@ const HomeScreen = () => {
     });
   };
 
+  const getProgress = (duration, remainingTime) => {
+    return Math.round(((duration - remainingTime) / duration) * 100);
+  };
+
   useEffect(() => {
     console.log('timersData=========>', timersData);
   }, [timersData]);
@@ -146,24 +150,25 @@ const HomeScreen = () => {
           showsVerticalScrollIndicator={false}
           renderItem={({item, index}) => {
             return (
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  if (expand === '' || index !== expand) {
-                    setExpand(index);
-                  } else {
-                    setExpand('');
-                  }
+              <View
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: 12,
+                  padding: 15,
                 }}>
-                <View
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: 12,
-                    padding: 15,
+                <TouchableWithoutFeedback
+                  onPress={() => {
+                    if (expand === '' || index !== expand) {
+                      setExpand(index);
+                    } else {
+                      setExpand('');
+                    }
                   }}>
                   <View
                     style={{
                       flexDirection: 'row',
                       justifyContent: 'space-between',
+                      paddingBottom: expand === index ? 20 : 0,
                     }}>
                     <View
                       style={{
@@ -204,13 +209,61 @@ const HomeScreen = () => {
                       )}
                     </View>
                   </View>
-                  {expand === index ? (
+                </TouchableWithoutFeedback>
+                {expand === index ? (
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingTop: 20,
+                      paddingBottom: 5,
+                      borderTopWidth: 1,
+                      borderColor: 'lightgray',
+                      justifyContent: 'space-between',
+                      gap: 15,
+                    }}>
+                    <View
+                      style={{
+                        width: '65%',
+                        gap: 5,
+                      }}>
+                      <View
+                        style={{
+                          width: '100%',
+                          height: 15,
+                          backgroundColor: '#EFF1FE',
+                          borderRadius: 50,
+                          justifyContent: 'center',
+                          paddingLeft: 3,
+                          paddingRight: 3,
+                        }}>
+                        <View
+                          style={{
+                            width: `${getProgress(
+                              item?.duration,
+                              item?.remainingTime,
+                            )}%`,
+                            height: 10,
+                            backgroundColor: '#067AF8',
+                            borderRadius: 50,
+                          }}></View>
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          lineHeight: 25,
+                          fontWeight: 'bold',
+                          color: '#000000',
+                        }}>
+                        {getProgress(item?.duration, item?.remainingTime)}%
+                      </Text>
+                    </View>
                     <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 20,
-                        alignSelf: 'center',
+                        gap: 15,
                       }}>
                       {item?.status === 'Paused' ? (
                         <TouchableWithoutFeedback
@@ -274,9 +327,9 @@ const HomeScreen = () => {
                         </View>
                       </TouchableWithoutFeedback>
                     </View>
-                  ) : null}
-                </View>
-              </TouchableWithoutFeedback>
+                  </View>
+                ) : null}
+              </View>
             );
           }}
         />
