@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {Header} from '@react-navigation/elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -29,9 +30,10 @@ const HomeScreen = () => {
     }
   };
 
-  function objectToSeconds(timeObj) {
-    return timeObj.hours * 3600 + timeObj.minutes * 60 + timeObj.seconds;
-  }
+  const saveTimers = async updatedTimers => {
+    setTimersData(updatedTimers);
+    await AsyncStorage.setItem('timers', JSON.stringify(updatedTimers));
+  };
 
   const formatTime = totalSeconds => {
     const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -51,19 +53,16 @@ const HomeScreen = () => {
           if (timer.status === 'Running') return timer;
 
           const interval = setInterval(() => {
-            setTimersData(prevTimers =>
-              prevTimers.map(t => {
-                if (t.id === id) {
-                  if (t.remainingTime > 0) {
-                    return {...t, remainingTime: t.remainingTime - 1};
-                  } else {
-                    clearInterval(intervalsRef.current[id]);
-                    return {...t, status: 'Completed'};
-                  }
-                }
-                return t;
-              }),
-            );
+            setTimersData(prevTimers => {
+              const updatedTimers = prevTimers.map(t =>
+                t.id === id && t.remainingTime > 0
+                  ? {...t, remainingTime: t.remainingTime - 1}
+                  : t,
+              );
+
+              saveTimers(updatedTimers);
+              return updatedTimers;
+            });
           }, 1000);
 
           intervalsRef.current[id] = interval;
@@ -72,6 +71,40 @@ const HomeScreen = () => {
         return timer;
       }),
     );
+  };
+
+  const pauseTimer = id => {
+    if (intervalsRef.current[id]) {
+      clearInterval(intervalsRef.current[id]);
+      delete intervalsRef.current[id];
+    }
+
+    setTimersData(prev => {
+      const updatedTimers = prev.map(timer =>
+        timer.id === id ? {...timer, status: 'Paused'} : timer,
+      );
+
+      saveTimers(updatedTimers); // Save the paused state
+      return updatedTimers;
+    });
+  };
+
+  const resetTimer = id => {
+    if (intervalsRef.current[id]) {
+      clearInterval(intervalsRef.current[id]);
+      delete intervalsRef.current[id];
+    }
+
+    setTimersData(prev => {
+      const updatedTimers = prev.map(timer =>
+        timer.id === id
+          ? {...timer, remainingTime: timer.duration, status: 'Paused'}
+          : timer,
+      );
+
+      saveTimers(updatedTimers); // Save reset state
+      return updatedTimers;
+    });
   };
 
   useEffect(() => {
@@ -109,11 +142,12 @@ const HomeScreen = () => {
             gap: 20,
             paddingBottom: 10,
           }}
+          showsVerticalScrollIndicator={false}
           renderItem={({item}) => {
             return (
               <TouchableWithoutFeedback
                 onPress={() => {
-                  startTimer(item?.id);
+                  // startTimer(item?.id);
                 }}>
                 <View
                   style={{
@@ -121,11 +155,66 @@ const HomeScreen = () => {
                     borderRadius: 12,
                     padding: 15,
                   }}>
-                  <View>
-                    <Text>{item?.name}</Text>
-                    <Text>{formatTime(item?.remainingTime)}</Text>
+                  <View
+                    style={{
+                      gap: 10,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        lineHeight: 23,
+                        fontWeight: '500',
+                        color: '#000000',
+                      }}>
+                      {item?.name}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        lineHeight: 23,
+                        fontWeight: '500',
+                        color: '#000000',
+                      }}>
+                      {formatTime(item?.remainingTime)}
+                    </Text>
                   </View>
-                  <View></View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 20,
+                      alignSelf: 'center',
+                    }}>
+                    {item?.status === 'Paused' ? (
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          startTimer(item?.id);
+                        }}>
+                        <View>
+                          <Icon name={'play-arrow'} size={40} color={'red'} />
+                        </View>
+                      </TouchableWithoutFeedback>
+                    ) : null}
+
+                    {item?.status === 'Running' ? (
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          pauseTimer(item?.id);
+                        }}>
+                        <View>
+                          <Icon name={'pause'} size={40} color={'red'} />
+                        </View>
+                      </TouchableWithoutFeedback>
+                    ) : null}
+                    <TouchableWithoutFeedback
+                      onPress={() => {
+                        resetTimer(item?.id);
+                      }}>
+                      <View>
+                        <Icon name={'restart-alt'} size={40} color={'red'} />
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
                 </View>
               </TouchableWithoutFeedback>
             );
