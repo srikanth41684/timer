@@ -5,15 +5,45 @@ import {
   TouchableWithoutFeedback,
   TextInput,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {TimerPickerModal} from 'react-native-timer-picker';
 import DropdownSelect from '../components/DropdownSelect';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CreateTimerScreen = () => {
   const [name, setName] = useState('');
   const [time, setTime] = useState({hours: 0, minutes: 0, seconds: 0});
   const [show, setShow] = useState(false);
   const [category, setCategory] = useState('Select an option');
+
+  function objectToSeconds(timeObj) {
+    return timeObj.hours * 3600 + timeObj.minutes * 60 + timeObj.seconds;
+  }
+
+  const createTimerHandler = async () => {
+    const savedTimers = await AsyncStorage.getItem('timers');
+    let oldTimers = JSON.parse(savedTimers);
+
+    const timer = {
+      id: Date.now().toString(),
+      name: name,
+      duration: objectToSeconds(time),
+      remainingTime: objectToSeconds(time),
+      category: category,
+      status: 'Paused',
+    };
+
+    if (oldTimers) {
+      await AsyncStorage.setItem(
+        'timers',
+        JSON.stringify([...oldTimers, timer]),
+      );
+    } else {
+      await AsyncStorage.setItem('timers', JSON.stringify([timer]));
+    }
+
+    console.log('timer===========>', timer);
+  };
 
   return (
     <SafeAreaView
@@ -92,7 +122,10 @@ const CreateTimerScreen = () => {
           />
           <DropdownSelect category={category} setCategory={setCategory} />
         </View>
-        <TouchableWithoutFeedback>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            createTimerHandler();
+          }}>
           <View
             style={{
               backgroundColor: '#000000',
