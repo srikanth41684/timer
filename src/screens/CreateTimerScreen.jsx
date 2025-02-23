@@ -5,14 +5,18 @@ import {
   TouchableWithoutFeedback,
   TextInput,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {TimerPickerModal} from 'react-native-timer-picker';
 import DropdownSelect from '../components/DropdownSelect';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
+import {AppThemeContext} from '../context/AppThemeContext';
+import {Header} from '@react-navigation/elements';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const CreateTimerScreen = () => {
   const navigation = useNavigation();
+  const {theme, setTheme} = useContext(AppThemeContext);
   const [name, setName] = useState('');
   const [time, setTime] = useState({hours: 0, minutes: 0, seconds: 0});
   const [show, setShow] = useState(false);
@@ -63,12 +67,39 @@ const CreateTimerScreen = () => {
       style={{
         flex: 1,
       }}>
+      <Header
+        headerStyle={{
+          backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
+        }}
+        headerTitleStyle={{
+          color: theme === 'dark' ? '#ffffff' : '#000000',
+          paddingLeft: 5,
+        }}
+        title="Create Timer"
+        headerLeft={() => (
+          <TouchableWithoutFeedback
+            onPress={() => {
+              navigation.goBack();
+            }}>
+            <View
+              style={{
+                paddingLeft: 15,
+              }}>
+              <Icon
+                name={'arrow-back-ios'}
+                size={25}
+                color={theme === 'dark' ? '#ffffff' : '#000000'}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        )}
+      />
       <View
         style={{
           flex: 1,
           padding: 20,
           justifyContent: 'space-between',
-          backgroundColor: '#EFF1FE',
+          backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
         }}>
         <View
           style={{
@@ -82,8 +113,10 @@ const CreateTimerScreen = () => {
               borderColor: 'gray',
               borderRadius: 10,
               paddingHorizontal: 15,
+              color: theme === 'dark' ? '#ffffff' : '#000000',
             }}
             placeholder="Enter timer name..."
+            placeholderTextColor={theme === 'dark' ? '#ffffff' : '#000000'}
             value={name}
             onChangeText={e => {
               setName(e);
@@ -105,7 +138,7 @@ const CreateTimerScreen = () => {
                 style={{
                   fontSize: 14,
                   lineHeight: 21,
-                  color: '#000000',
+                  color: theme === 'dark' ? '#ffffff' : '#000000',
                   fontWeight: '400',
                 }}>
                 {time.hours || time.minutes || time.seconds
@@ -137,13 +170,24 @@ const CreateTimerScreen = () => {
         </View>
         <TouchableWithoutFeedback
           onPress={() => {
-            if (name !== '' && category !== 'Select an option' && time) {
+            if (
+              name !== '' &&
+              category !== 'Select an option' &&
+              (time?.hours !== 0 || time?.minutes !== 0 || time?.seconds !== 0)
+            ) {
               createTimerHandler();
             }
           }}>
           <View
             style={{
-              backgroundColor: '#000000',
+              backgroundColor:
+                name !== '' &&
+                category !== 'Select an option' &&
+                (time?.hours !== 0 ||
+                  time?.minutes !== 0 ||
+                  time?.seconds !== 0)
+                  ? 'blue'
+                  : 'gray',
               borderRadius: 25,
               alignItems: 'center',
               paddingVertical: 10,

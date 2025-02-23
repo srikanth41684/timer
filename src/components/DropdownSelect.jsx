@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
 } from 'react-native';
+import {AppThemeContext} from '../context/AppThemeContext';
 
 const DropdownSelect = ({category, setCategory}) => {
+  const {theme, setTheme} = useContext(AppThemeContext);
   const [isDropdownVisible, setDropdownVisible] = useState(false);
 
   const options = [
@@ -34,7 +36,13 @@ const DropdownSelect = ({category, setCategory}) => {
             borderRadius: 10,
             paddingLeft: 15,
           }}>
-          <Text style={styles.selectedText}>{category}</Text>
+          <Text
+            style={{
+              fontSize: 16,
+              color: theme === 'dark' ? '#ffffff' : '#000000',
+            }}>
+            {category}
+          </Text>
         </View>
       </TouchableWithoutFeedback>
 
@@ -42,7 +50,7 @@ const DropdownSelect = ({category, setCategory}) => {
       {isDropdownVisible && (
         <View
           style={{
-            backgroundColor: '#EFF1FE',
+            backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
             borderBottomLeftRadius: 8,
             borderBottomRightRadius: 8,
             borderColor: 'lightgray',
@@ -56,7 +64,13 @@ const DropdownSelect = ({category, setCategory}) => {
               <TouchableOpacity
                 style={styles.dropdownItem}
                 onPress={() => selectItem(item)}>
-                <Text style={styles.itemText}>{item.label}</Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: theme === 'dark' ? '#ffffff' : '#000000',
+                  }}>
+                  {item.label}
+                </Text>
               </TouchableOpacity>
             )}
           />
