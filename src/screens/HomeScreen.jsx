@@ -1,7 +1,15 @@
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import React, {useCallback, useContext, useEffect, useRef, useState} from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   FlatList,
+  LogBox,
+  Modal,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -20,10 +28,7 @@ const HomeScreen = () => {
   const intervalsRef = useRef({});
   const [expand, setExpand] = useState('');
   const [completedData, setCompletedData] = useState(null);
-
-  // useEffect(() => {
-  //   getTimersHandler();
-  // }, []);
+  const [showModel, setShowModel] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -49,14 +54,9 @@ const HomeScreen = () => {
     if (completedData) {
       const data = await AsyncStorage.getItem('history');
       let finalData = JSON.parse(data);
-      if (finalData) {
-        AsyncStorage.setItem(
-          'history',
-          JSON.stringify([...finalData, completedData]),
-        );
-      } else {
-        AsyncStorage.setItem('history', JSON.stringify([...completedData]));
-      }
+      let history = finalData ? [...finalData, completedData] : [completedData];
+
+      AsyncStorage.setItem('history', JSON.stringify(history));
     }
   };
 
@@ -68,8 +68,10 @@ const HomeScreen = () => {
     let data = [];
     if (updatedTimers) {
       updatedTimers?.filter(item => {
+        let date = new Date();
         if (item?.status === 'Completed') {
-          setCompletedData(item);
+          setCompletedData({...item, completedAt: date});
+          setShowModel(true);
         } else {
           data.push(item);
         }
@@ -127,42 +129,10 @@ const HomeScreen = () => {
         return updatedTimers;
       });
     }, 1000);
+    intervalsRef.current[id] = interval;
   };
 
-  const startTimer = id => {
-    setTimersData(prev =>
-      prev.map(timer => {
-        if (timer.id === id) {
-          if (timer.status === 'Running') return timer;
-
-          const interval = setInterval(() => {
-            setTimersData(prevTimers => {
-              const updatedTimers = prevTimers.map(t => {
-                if (t.id === id) {
-                  if (t.remainingTime > 0) {
-                    return {...t, remainingTime: t.remainingTime - 1};
-                  } else {
-                    return {...t, status: 'Completed'};
-                  }
-                } else {
-                  return t;
-                }
-              });
-
-              saveTimers(updatedTimers);
-              return updatedTimers;
-            });
-          }, 1000);
-
-          intervalsRef.current[id] = interval;
-          return {...timer, status: 'Running'};
-        }
-        return timer;
-      }),
-    );
-  };
-
-  const pauseTimer = id => {
+  const pauseTimerHandler = id => {
     if (intervalsRef.current[id]) {
       clearInterval(intervalsRef.current[id]);
       delete intervalsRef.current[id];
@@ -172,13 +142,12 @@ const HomeScreen = () => {
       const updatedTimers = prev.map(timer =>
         timer.id === id ? {...timer, status: 'Paused'} : timer,
       );
-
-      saveTimers(updatedTimers); // Save the paused state
+      saveTimers(updatedTimers);
       return updatedTimers;
     });
   };
 
-  const resetTimer = id => {
+  const resetTimerHandler = id => {
     if (intervalsRef.current[id]) {
       clearInterval(intervalsRef.current[id]);
       delete intervalsRef.current[id];
@@ -190,8 +159,7 @@ const HomeScreen = () => {
           ? {...timer, remainingTime: timer.duration, status: 'Paused'}
           : timer,
       );
-
-      saveTimers(updatedTimers); // Save reset state
+      saveTimers(updatedTimers);
       return updatedTimers;
     });
   };
@@ -206,8 +174,8 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    console.log('timersData===========>', timersData, theme);
-  }, [timersData, theme]);
+    console.log('timersData===========>', timersData, theme, completedData);
+  }, [timersData, theme, completedData]);
 
   return (
     <SafeAreaView
@@ -286,6 +254,68 @@ const HomeScreen = () => {
           backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
           padding: 20,
         }}>
+        {showModel ? (
+          <Modal transparent={true} animationType="fade">
+            <View
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.5)',
+              }}>
+              <View
+                style={{
+                  backgroundColor: '#ffffff',
+                  width: '70%',
+                  // height: 150,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 10,
+                  gap: 15,
+                  padding: 10,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    color: 'blue',
+                    fontWeight: 'bold',
+                  }}>
+                  Congratulation
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    color: 'green',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  }}>
+                  {completedData?.name} is Completed
+                </Text>
+                <TouchableWithoutFeedback
+                  onPress={() => {
+                    setShowModel(false);
+                  }}>
+                  <View
+                    style={{
+                      backgroundColor: 'blue',
+                      paddingHorizontal: 40,
+                      paddingVertical: 10,
+                      borderRadius: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: '#ffffff',
+                        fontWeight: 'bold',
+                      }}>
+                      OK
+                    </Text>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </View>
+          </Modal>
+        ) : null}
         <FlatList
           data={timersData}
           contentContainerStyle={{
@@ -338,7 +368,21 @@ const HomeScreen = () => {
                         {formatTime(item?.remainingTime)}
                       </Text>
                     </View>
-                    <View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 10,
+                      }}>
+                      <View>
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            color: 'green',
+                          }}>
+                          {item?.category}
+                        </Text>
+                      </View>
                       {expand === index ? (
                         <Icon
                           name={'keyboard-arrow-up'}
@@ -436,7 +480,7 @@ const HomeScreen = () => {
                       {item?.status === 'Running' ? (
                         <TouchableWithoutFeedback
                           onPress={() => {
-                            pauseTimer(item?.id);
+                            pauseTimerHandler(item?.id);
                           }}>
                           <View
                             style={{
@@ -453,7 +497,7 @@ const HomeScreen = () => {
                       ) : null}
                       <TouchableWithoutFeedback
                         onPress={() => {
-                          resetTimer(item?.id);
+                          resetTimerHandler(item?.id);
                         }}>
                         <View
                           style={{
