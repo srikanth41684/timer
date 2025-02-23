@@ -22,12 +22,23 @@ const CreateTimerScreen = () => {
     return timeObj.hours * 3600 + timeObj.minutes * 60 + timeObj.seconds;
   }
 
+  function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+      /[xy]/g,
+      function (c) {
+        const r = (Math.random() * 16) | 0,
+          v = c == 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      },
+    );
+  }
+
   const createTimerHandler = async () => {
     const savedTimers = await AsyncStorage.getItem('timers');
     let oldTimers = JSON.parse(savedTimers);
 
     const timer = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       name: name,
       duration: objectToSeconds(time),
       remainingTime: objectToSeconds(time),

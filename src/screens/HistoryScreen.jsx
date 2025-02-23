@@ -5,43 +5,27 @@ import {
   FlatList,
   TouchableWithoutFeedback,
 } from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {AppThemeContext} from '../context/AppThemeContext';
 import {Header} from '@react-navigation/elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HistoryScreen = () => {
-  const navigation = useNavigation();
   const {theme, setTheme} = useContext(AppThemeContext);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState(null);
-  // const data = [
-  //   {
-  //     id: 1,
-  //     timerName: 'Workout Timer',
-  //     completionTime: '08:30 AM',
-  //     category: 'Workout',
-  //   },
-  //   {
-  //     id: 2,
-  //     timerName: 'Workout Timer',
-  //     completionTime: '08:30 AM',
-  //     category: 'Workout',
-  //   },
-  //   {
-  //     id: 3,
-  //     timerName: 'Study Timer',
-  //     completionTime: '08:30 AM',
-  //     category: 'Study',
-  //   },
-  //   {
-  //     id: 4,
-  //     timerName: 'Break Timer',
-  //     completionTime: '08:30 AM',
-  //     category: 'Break',
-  //   },
-  // ];
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen is focused (returned to this screen)');
+      getHistoryHandler(); // Call your function here
+
+      return () => {
+        console.log('Screen is unfocused (navigating away)');
+      };
+    }, []),
+  );
 
   const getHistoryHandler = async () => {
     const data = await AsyncStorage.getItem('history');
@@ -60,9 +44,15 @@ const HistoryScreen = () => {
     getHistoryHandler(); // Fetch updated timers from AsyncStorage
   };
 
-  useEffect(() => {
-    getHistoryHandler();
-  }, []);
+  const clearSpecificKey = async key => {
+    try {
+      await AsyncStorage.removeItem(key);
+      console.log(`Key "${key}" removed successfully`);
+      getHistoryHandler();
+    } catch (error) {
+      console.error('Error removing key:', error);
+    }
+  };
 
   function formatDate(dateString) {
     const date = new Date(dateString);
@@ -92,6 +82,36 @@ const HistoryScreen = () => {
           paddingLeft: 20,
         }}
         title="History"
+        headerRight={() => (
+          <View
+            style={{
+              paddingRight: 20,
+            }}>
+            <TouchableWithoutFeedback
+              onPress={() => {
+                clearSpecificKey('history');
+              }}>
+              <View
+                style={{
+                  backgroundColor: '#3D4AEE',
+                  borderRadius: 50,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 20,
+                  paddingVertical: 5,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: '#ffffff',
+                    fontWeight: '500',
+                  }}>
+                  Clear History
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        )}
       />
       <View
         style={{
@@ -99,65 +119,85 @@ const HistoryScreen = () => {
           backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
           padding: 20,
         }}>
-        <FlatList
-          data={data}
-          contentContainerStyle={{
-            gap: 20,
-            paddingBottom: 10,
-          }}
-          keyExtractor={({item}) => item}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item}) => {
-            return (
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  AsyncStorage.clear();
-                }}>
-                <View
-                  style={{
-                    backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
-                    borderRadius: 12,
-                    padding: 15,
-                    gap: 10,
+        {data?.length === 0 ? (
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text
+              style={{
+                fontSize: 18,
+                color: theme === 'dark' ? '#ffffff' : '#000000',
+                fontWeight: 'bold',
+              }}>
+              No history available
+            </Text>
+          </View>
+        ) : null}
+
+        {data?.length > 0 ? (
+          <FlatList
+            data={data}
+            contentContainerStyle={{
+              gap: 20,
+              paddingBottom: 10,
+            }}
+            keyExtractor={item => item.id}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            showsVerticalScrollIndicator={false}
+            renderItem={({item}) => {
+              return (
+                <TouchableWithoutFeedback
+                  onPress={() => {
+                    AsyncStorage.clear();
                   }}>
                   <View
                     style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
+                      backgroundColor: theme === 'dark' ? '#2E2E2E' : '#ffffff',
+                      borderRadius: 12,
+                      padding: 15,
+                      gap: 10,
                     }}>
-                    <Text
+                    <View
                       style={{
-                        fontSize: 16,
-                        lineHeight: 23,
-                        color: theme === 'dark' ? '#ffffff' : '#000000',
-                        fontWeight: '500',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
                       }}>
-                      {item?.name}
-                    </Text>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          lineHeight: 23,
+                          color: theme === 'dark' ? '#ffffff' : '#000000',
+                          fontWeight: '500',
+                        }}>
+                        {item?.name}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          lineHeight: 21,
+                          color: theme === 'dark' ? '#FFA24D' : 'green',
+                        }}>
+                        {item.category}
+                      </Text>
+                    </View>
                     <Text
                       style={{
                         fontSize: 14,
                         lineHeight: 21,
-                        color: theme === 'dark' ? '#FFA24D' : 'green',
+                        color: theme === 'dark' ? '#ffffff' : '#000000',
                       }}>
-                      {item.category}
+                      Completed at: {formatDate(item?.completedAt)}
                     </Text>
                   </View>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      lineHeight: 21,
-                      color: theme === 'dark' ? '#ffffff' : '#000000',
-                    }}>
-                    Completed at: {formatDate(item?.completedAt)}
-                  </Text>
-                </View>
-              </TouchableWithoutFeedback>
-            );
-          }}
-        />
+                </TouchableWithoutFeedback>
+              );
+            }}
+          />
+        ) : null}
       </View>
     </SafeAreaView>
   );
