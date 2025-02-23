@@ -20,6 +20,7 @@ import {Header} from '@react-navigation/elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {AppThemeContext} from '../context/AppThemeContext';
+import notifee from '@notifee/react-native';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -104,6 +105,9 @@ const HomeScreen = () => {
 
         const updatedTimers = prevData?.map(timer => {
           if (timer?.id === id) {
+            if (timer?.remainingTime === 5) {
+              onDisplayNotification(timer);
+            }
             if (timer?.remainingTime > 0) {
               return {
                 ...timer,
@@ -172,6 +176,28 @@ const HomeScreen = () => {
     AsyncStorage.setItem('theme', val);
     setTheme(val);
   };
+
+  async function onDisplayNotification(value) {
+    console.log('value===============>', value);
+
+    // Create a channel (Android only)
+    await notifee.createChannel({
+      id: 'default',
+      name: 'Default Channel',
+    });
+
+    // Show notification
+    await notifee.displayNotification({
+      title: `Timer-${value?.category}`,
+      body: `Only 5 Seconds left to Complete Your ${value?.name} task`,
+      android: {
+        channelId: 'default',
+        pressAction: {
+          id: 'default',
+        },
+      },
+    });
+  }
 
   useEffect(() => {
     console.log('timersData===========>', timersData, theme, completedData);
@@ -525,6 +551,7 @@ const HomeScreen = () => {
 
         <TouchableWithoutFeedback
           onPress={() => {
+            // onDisplayNotification();
             navigation.navigate('createTimer');
           }}>
           <View

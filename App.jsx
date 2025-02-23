@@ -1,4 +1,4 @@
-import {Appearance} from 'react-native';
+import {Appearance, PermissionsAndroid, Platform} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import GlobalStackNavigator from './src/navigation/GlobalStackNavigator';
@@ -10,7 +10,25 @@ const App = () => {
 
   useEffect(() => {
     themeHandler();
+    requestPermissions();
   }, []);
+
+  async function requestPermissions() {
+    if (Platform.OS === 'android') {
+      console.log("Yesllllllll=========>");
+      
+      try {
+        await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        );
+        console.log('Granted===================>');
+        
+      } catch (error) {
+        console.log('error===========>', error);
+        
+      }
+    }
+  }
 
   const themeHandler = async () => {
     AsyncStorage.getItem('theme')
