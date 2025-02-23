@@ -15,14 +15,10 @@ const App = () => {
 
   async function requestPermissions() {
     if (Platform.OS === 'android') {
-      console.log("Yesllllllll=========>");
-      
       try {
         await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
         );
-        console.log('Granted===================>');
-        
       } catch (error) {
         console.log('error===========>', error);
         
@@ -43,10 +39,6 @@ const App = () => {
       })
       .catch(error => console.error('Error retrieving theme:', error));
   };
-
-  useEffect(() => {
-    console.log('AppTheme==========>', theme);
-  }, [theme]);
 
   return (
     <AppThemeContext.Provider value={{theme, setTheme}}>

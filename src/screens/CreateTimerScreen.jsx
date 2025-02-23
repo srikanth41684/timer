@@ -20,7 +20,7 @@ const CreateTimerScreen = () => {
   const [name, setName] = useState('');
   const [time, setTime] = useState({hours: 0, minutes: 0, seconds: 0});
   const [show, setShow] = useState(false);
-  const [category, setCategory] = useState('Select an option');
+  const [category, setCategory] = useState('Select category');
 
   function objectToSeconds(timeObj) {
     return timeObj.hours * 3600 + timeObj.minutes * 60 + timeObj.seconds;
@@ -59,7 +59,6 @@ const CreateTimerScreen = () => {
       await AsyncStorage.setItem('timers', JSON.stringify([timer]));
     }
     navigation.goBack();
-    console.log('timer===========>', timer);
   };
 
   return (
@@ -172,7 +171,7 @@ const CreateTimerScreen = () => {
           onPress={() => {
             if (
               name !== '' &&
-              category !== 'Select an option' &&
+              category !== 'Select category' &&
               (time?.hours !== 0 || time?.minutes !== 0 || time?.seconds !== 0)
             ) {
               createTimerHandler();
@@ -182,7 +181,7 @@ const CreateTimerScreen = () => {
             style={{
               backgroundColor:
                 name !== '' &&
-                category !== 'Select an option' &&
+                category !== 'Select category' &&
                 (time?.hours !== 0 ||
                   time?.minutes !== 0 ||
                   time?.seconds !== 0)

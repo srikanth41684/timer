@@ -19,7 +19,7 @@ const HistoryScreen = () => {
   useFocusEffect(
     useCallback(() => {
       console.log('Screen is focused (returned to this screen)');
-      getHistoryHandler(); // Call your function here
+      getHistoryHandler();
 
       return () => {
         console.log('Screen is unfocused (navigating away)');
@@ -30,7 +30,6 @@ const HistoryScreen = () => {
   const getHistoryHandler = async () => {
     const data = await AsyncStorage.getItem('history');
     let finalData = JSON.parse(data);
-    console.log('finalData==========>', finalData);
     if (finalData) {
       setData(finalData);
     } else {
@@ -47,7 +46,6 @@ const HistoryScreen = () => {
   const clearSpecificKey = async key => {
     try {
       await AsyncStorage.removeItem(key);
-      console.log(`Key "${key}" removed successfully`);
       getHistoryHandler();
     } catch (error) {
       console.error('Error removing key:', error);
@@ -56,14 +54,13 @@ const HistoryScreen = () => {
 
   function formatDate(dateString) {
     const date = new Date(dateString);
-    // Get hours, minutes, and seconds
+    
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
 
-    // Get month name and year
-    const monthName = date.toLocaleString('en-US', {month: 'short'}); // "Feb"
-    const year = date.getFullYear(); // 2025
+    const monthName = date.toLocaleString('en-US', {month: 'short'});
+    const year = date.getFullYear();
 
     return `${hours}:${minutes}:${seconds}, ${monthName} ${year}`;
   }
@@ -117,7 +114,7 @@ const HistoryScreen = () => {
         style={{
           flex: 1,
           backgroundColor: theme === 'dark' ? '#121212' : '#EFF1FE',
-          padding: 20,
+          paddingHorizontal: 20,
         }}>
         {data?.length === 0 ? (
           <View
@@ -142,7 +139,7 @@ const HistoryScreen = () => {
             data={data}
             contentContainerStyle={{
               gap: 20,
-              paddingBottom: 10,
+              paddingVertical: 30,
             }}
             keyExtractor={item => item.id}
             refreshing={refreshing}
